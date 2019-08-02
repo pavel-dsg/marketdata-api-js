@@ -91,6 +91,14 @@ gulp.task('build-example-bundle', function () {
 		.pipe(gulp.dest('./example/browser/'));
 });
 
+gulp.task('build-example-simple', function () {
+	return browserify(['./lib/index.js', './example/browser-simple/js/ddfclient.js'])
+		.bundle()
+		.pipe(source('example-simple-bundle.js'))
+		.pipe(buffer())
+		.pipe(gulp.dest('./example/browser-simple/'));
+});
+
 gulp.task('build-browser-tests', function () {
     return browserify({ entries: glob.sync('test/specs/**/*.js') }).bundle()
         .pipe(source('barchart-marketdata-api-tests-' + getVersionForComponent() + '.js'))
