@@ -140,3 +140,7 @@ gulp.task('lint', function() {
 });
 
 gulp.task('default', [ 'lint' ]);
+
+gulp.task('watch', function () {
+    gulp.watch('lib/**/*.js' , ['build-example-simple']);
+});

@@ -10,18 +10,26 @@ var password = "barchart";
 var server = "qsws-us-e-01.aws.barchart.com";
 var connection = null;
 
+var numQuotes = 0;
+var numKA = 0;
 var onMarketUpdate = function(message) {
 	var q = connection.getMarketState().getQuote(message.symbol);
-	if (q)
-		console.log('Symbol: ' + q.symbol + '\nLast:' + q.lastPrice + "\nBid: "+q.bidPrice + "\nAsk:"+q.askPrice);
+	numQuotes++;
+	if (q) {
+		if((numQuotes % 20) == 0) {
+			console.log('NumQuotes: ' + numQuotes +  ' Symbol: ' + q.symbol + ' Last:' + q.lastPrice + " Bid: " +q.bidPrice + " Ask:"+q.askPrice);
+		}
+	}
 };
 var onTimestamp = function(date) {
+	numKA++;
+	if((numKA % 20) == 0) 
 	console.log(date);
 };
 
 
 $(document).ready(function() {
-	console.log("Starting DDF Client");
+	console.log("Starting DDF Client ");
 
 	connection = new Connection();
 	
