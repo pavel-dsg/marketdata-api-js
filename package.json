@@ -44,6 +44,7 @@
     "@barchart/marketdata-utilities-js": "~3.0.0",
     "axios": "^0.19.0",
     "log4js": "^4.4.0",
+    "protobufjs": "^6.8.8",
     "ws": "7.0.1"
   },
   "devDependencies": {

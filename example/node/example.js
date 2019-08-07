@@ -9,10 +9,11 @@ const Connection = require('./../../lib/connection/websocket/Connection'),
 const CustomLoggingProvider = require('./logging/CustomLoggingProvider');
 
 const LoggerFactory = require('./../../lib/logging/LoggerFactory');
+const ClientConfig = require('./../../lib/common/ClientConfig');
 
 const startup = (() => {
 	'use strict';
-	
+
 	//LoggerFactory.configureForConsole();
 	//LoggerFactory.configureForSilence();
 
@@ -44,7 +45,11 @@ const startup = (() => {
 
 	__logger.log(`Example: Instantiating Connection (using Node.js adapter) for [ ${username}/${password} ] @ [ ${host} ]`);
 
-	connection = new Connection();
+	var config = new ClientConfig();
+	config.url = "ws://openfeed.aws.barchart.com:9001/ws";
+	config.protocol = "openfeed";
+
+	connection = new Connection(config);
 	adapterFactory = new WebSocketAdapterFactoryForNode();
 
 	connection.connect(host, username, password, adapterFactory);
@@ -53,7 +58,7 @@ const startup = (() => {
 		symbols.split(',').forEach((s) => {
 			let price = null;
 
-			const handleMarketUpdate = function(message) {
+			const handleMarketUpdate = function (message) {
 				const current = connection.getMarketState().getQuote(s).lastPrice;
 
 				if (price !== current) {
