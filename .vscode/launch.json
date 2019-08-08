@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "MarketDataApiNode",
             "program": "${workspaceFolder}/example/node/example.js",
-            "args": [ "qsws-us-e-01.aws.barchart.com","dlucek","barchart","AAPL"]
+            "args": [ "qsws-us-e-01.aws.barchart.com","***openfeed","password","AAPL"]
         }
     ]
-}
+} 

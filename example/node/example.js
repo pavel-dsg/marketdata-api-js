@@ -9,7 +9,9 @@ const Connection = require('./../../lib/connection/websocket/Connection'),
 const CustomLoggingProvider = require('./logging/CustomLoggingProvider');
 
 const LoggerFactory = require('./../../lib/logging/LoggerFactory');
-const ClientConfig = require('./../../lib/common/ClientConfig');
+
+const ClientConfig = require('./../../lib/common/ClientConfig').ClientConfig,
+	  Protocol = require('./../../lib/common/ClientConfig').Protocol;
 
 const startup = (() => {
 	'use strict';
@@ -47,12 +49,20 @@ const startup = (() => {
 
 	var config = new ClientConfig();
 	config.url = "ws://openfeed.aws.barchart.com:9001/ws";
-	config.protocol = "openfeed";
+	config.protocol = Protocol.OPENFEED;
 
 	connection = new Connection(config);
 	adapterFactory = new WebSocketAdapterFactoryForNode();
 
 	connection.connect(host, username, password, adapterFactory);
+
+	// Handlers
+	connection.on(SubscriptionType.Timestamp, ( message) => {
+		__logger.log('TS: '+JSON.stringify(message));
+	});
+	connection.on(SubscriptionType.Events, ( message) => {
+		__logger.log('Event: '+JSON.stringify(message));
+	});
 
 	if (typeof symbols === 'string') {
 		symbols.split(',').forEach((s) => {
