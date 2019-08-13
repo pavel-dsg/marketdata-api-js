@@ -69,7 +69,13 @@ const startup = (() => {
 			let price = null;
 
 			const handleMarketUpdate = function (message) {
-				__logger.log("< " + message.type +" "+ JSON.stringify(message));
+				switch(message.type) {
+					case "TOB":
+						break;
+					case "TRADE":
+						__logger.log("< " + message.type +" "+ JSON.stringify(message));
+						break;
+				}
 
 				let q = connection.getMarketState().getQuote(s);
 				const current = connection.getMarketState().getQuote(s).lastPrice;
