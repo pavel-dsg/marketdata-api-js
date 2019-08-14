@@ -11,7 +11,7 @@ const CustomLoggingProvider = require('./logging/CustomLoggingProvider');
 const LoggerFactory = require('./../../lib/logging/LoggerFactory');
 
 const ClientConfig = require('./../../lib/common/ClientConfig').ClientConfig,
-	  Protocol = require('./../../lib/common/ClientConfig').Protocol;
+	Protocol = require('./../../lib/common/ClientConfig').Protocol;
 
 const startup = (() => {
 	'use strict';
@@ -57,38 +57,40 @@ const startup = (() => {
 	connection.connect(host, username, password, adapterFactory);
 
 	// Handlers
-	connection.on(SubscriptionType.Timestamp, ( message) => {
-		__logger.log('TS: '+JSON.stringify(message));
+	connection.on(SubscriptionType.Timestamp, (message) => {
+		__logger.log('TS: ' + JSON.stringify(message));
 	});
-	connection.on(SubscriptionType.Events, ( message) => {
-		__logger.log('Event: '+JSON.stringify(message));
+	connection.on(SubscriptionType.Events, (message) => {
+		__logger.log('Event: ' + JSON.stringify(message));
 	});
 
 	if (typeof symbols === 'string') {
 		symbols.split(',').forEach((s) => {
 			let price = null;
 
-			const handleMarketUpdate = function (message) {
-				switch(message.type) {
+			const handleMarketUpdate = (message) => {
+				switch (message.type) {
 					case "TOB":
+						// __logger.log("< " + message.type +" "+ JSON.stringify(message));
 						break;
 					case "TRADE":
 						__logger.log("< " + message.type +" "+ JSON.stringify(message));
 						break;
 				}
-
 				let q = connection.getMarketState().getQuote(s);
 				const current = connection.getMarketState().getQuote(s).lastPrice;
-
-
 				if (price !== current) {
 					price = current;
-
 					__logger.log(`Example: ${s} = ${price}`);
 				}
 			};
 
+			const handleMarketDepth = (message) => {
+				__logger.log("< " + message.type + " " + JSON.stringify(message));
+			};
+
 			connection.on(SubscriptionType.MarketUpdate, handleMarketUpdate, s);
+			connection.on(SubscriptionType.MarketDepth, handleMarketDepth, s);
 		});
 	}
 })();
