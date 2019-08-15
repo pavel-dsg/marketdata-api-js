@@ -47,12 +47,15 @@ const startup = (() => {
 
 	__logger.log(`Example: Instantiating Connection (using Node.js adapter) for [ ${username}/${password} ] @ [ ${host} ]`);
 
+	var useOpenfeed = true;
 	var config = new ClientConfig();
-	config.url = "ws://openfeed.aws.barchart.com:9001/ws";
-	config.protocol = Protocol.OPENFEED;
+	if(useOpenfeed) {
+		config.url = "ws://openfeed.aws.barchart.com:9001/ws";
+		config.protocol = Protocol.OPENFEED;
+	}
 
 	connection = new Connection(config);
-	adapterFactory = new WebSocketAdapterFactoryForNode();
+	adapterFactory = new WebSocketAdapterFactoryForNode(config);
 
 	connection.connect(host, username, password, adapterFactory);
 
@@ -71,7 +74,7 @@ const startup = (() => {
 			const handleMarketUpdate = (message) => {
 				switch (message.type) {
 					case "TOB":
-						// __logger.log("< " + message.type +" "+ JSON.stringify(message));
+						__logger.log("< " + message.type +" "+ JSON.stringify(message));
 						break;
 					case "TRADE":
 						__logger.log("< " + message.type +" "+ JSON.stringify(message));
@@ -90,7 +93,7 @@ const startup = (() => {
 			};
 
 			connection.on(SubscriptionType.MarketUpdate, handleMarketUpdate, s);
-			connection.on(SubscriptionType.MarketDepth, handleMarketDepth, s);
+			// connection.on(SubscriptionType.MarketDepth, handleMarketDepth, s);
 		});
 	}
 })();

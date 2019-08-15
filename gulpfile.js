@@ -92,11 +92,11 @@ gulp.task('build-example-bundle', function () {
 });
 
 gulp.task('build-example-simple', function () {
-	return browserify(['./lib/index.js', './example/browser-simple/js/ddfclient.js'])
+	return browserify(['./lib/index.js', './example/browser-simple/public/js/marketdata-client.js'])
 		.bundle()
 		.pipe(source('example-simple-bundle.js'))
 		.pipe(buffer())
-		.pipe(gulp.dest('./example/browser-simple/'));
+		.pipe(gulp.dest('./example/browser-simple/public'));
 });
 
 gulp.task('build-browser-tests', function () {

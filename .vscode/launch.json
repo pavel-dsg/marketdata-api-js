@@ -9,7 +9,15 @@
             "request": "launch",
             "name": "MarketDataApiNode",
             "program": "${workspaceFolder}/example/node/example.js",
-            "args": [ "qsws-us-e-01.aws.barchart.com","***openfeed","password","ESU9"]
+            "args": [ "qsws-us-e-01.aws.barchart.com","***openfeed","password","IBM"]
+            // "args": [ "qsws-us-e-01.aws.barchart.com","***openfeed","password","BTCUSD"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "MarketDataApiBrowserExample",
+            "program": "${workspaceFolder}/example/browser-simple/app.js",
+            // "args": [ "qsws-us-e-01.aws.barchart.com","***openfeed","password","ESU9"]
             // "args": [ "qsws-us-e-01.aws.barchart.com","***openfeed","password","BTCUSD"]
         }
     ]
