@@ -1,8 +1,11 @@
 
-const version = require('./../../../lib/index').version;
+const version = require('../../../../lib/index').version;
 
-const Connection = require('./../../../lib/connection/websocket/Connection'),
-	symbolResolver = require('./../../../lib/util/symbolResolver');
+const ClientConfig = require('../../../../lib/common/ClientConfig').ClientConfig,
+	Protocol = require('../../../../lib/common/ClientConfig').Protocol;
+
+const Connection = require('../../../../lib/connection/websocket/Connection'),
+	symbolResolver = require('../../../../lib/util/symbolResolver');
 
 
 var username = "dlucek";
@@ -31,25 +34,32 @@ var onTimestamp = function (date) {
 
 
 $(document).ready(function () {
-	console.log("Starting DDF Client ");
+	console.log("Starting Market Data JS Client ");
 
-	connection = new Connection();
+	var useOpenfeed = true;
+	var config = new ClientConfig();
+	if(useOpenfeed) {
+		config.url = "ws://openfeed.aws.barchart.com:9001/ws";
+		config.protocol = Protocol.OPENFEED;
+	}
+	connection = new Connection(config);
 
 
 	// Setup handlers
 	connection.on('events', function (info) {
 		// Basic Network Events
-		console.log("EVT: " + info);
+		console.log("EVT: " + JSON.stringify(info));
 	});
 	connection.on('timestamp', onTimestamp);
+
 	console.log("Subscribing to: "+symbols.length + " symbols");
+	
+	console.log("Connecting to: " + server ? server : config.url);
+	connection.connect(server, username, password);
+	
 	symbols.forEach((sym) => {
 		connection.on('marketUpdate', onMarketUpdate, sym);
 	});
-
-	console.log("Connecting to: " + server);
-	connection.connect(server, username, password);
-
 });
 
 
