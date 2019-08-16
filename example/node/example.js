@@ -52,6 +52,8 @@ const startup = (() => {
 	if(useOpenfeed) {
 		config.url = "ws://openfeed.aws.barchart.com:9001/ws";
 		config.protocol = Protocol.OPENFEED;
+		// Configurable protobuf path
+		// config.protoPath = "xxxx";
 	}
 
 	connection = new Connection(config);
