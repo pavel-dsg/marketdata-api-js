@@ -80,6 +80,7 @@ module.exports = (() => {
     class ClientConfig {
         constructor() {
             this._protocol = Protocol.DDF;
+            this._protoPath = null;
         }
 
         get url() {
@@ -94,6 +95,13 @@ module.exports = (() => {
         }
         set protocol(v) {
             this._protocol = v;
+        }
+
+        get protoPath() {
+            return this._protoPath;
+        }
+        set protoPath(v) {
+            this._protoPath = v;
         }
 
         isOpenfeed() {
@@ -754,7 +762,7 @@ module.exports = (() => {
 			}
 
 			__logger.log('Connection: Initializing.');
-			
+
 
 			__loginInfo.username = username;
 			__loginInfo.password = password;
@@ -766,7 +774,7 @@ module.exports = (() => {
 			if (__config && __config.url) {
 				url = __config.url;
 			}
-			__logger.log('Connection: Attemping connectionn to: ',url);
+			__logger.log('Connection: Attemping connectionn to: ', url);
 
 			__connection = __connectionFactory.build(url);
 			__connection.binaryType = 'arraybuffer';
@@ -2074,6 +2082,13 @@ module.exports = (() => {
 			__connectionState = state.authenticating;
 		}
 
+		var subReq = {
+			"subscriptionRequest": {
+				"correlationId": "<correlationId>",
+				"token": "<token>",
+				"service": Openfeed.Service.REAL_TIME,
+			}
+		};
 		/**
 		 * Translates JERQ command to Openfeed Request.
 		 * i.e.
@@ -2081,43 +2096,66 @@ module.exports = (() => {
  		 *   GO AAPL=Ssc,TLSA=Ssc
 		  * 
 		 * @param {String} message Jerq Command 
+		 * 
+		 * TODO support all commands
 		 */
 		function openfeedSendRequest(message) {
-			message.split(" ").forEach((cmd) => {
-				cmd = cmd.trim();
-				if (cmd === "GO") {
-					return;
-				}
-				else if (cmd == "_TIMESTAMP_") {
-					// ignore
-				}
-				else {
-					cmd.split(",").forEach((c) => {
-						let subReq = c.split("=");
-						__logger.info("Subscribing to: " + subReq[0] + " " + subReq[1]);
-						openfeedSendSubscriptionRequest(subReq[0]);
+			let cmds = message.split(" ");
+			switch (cmds[0].trim()) {
+				case "GO":
+					cmds.shift();
+					if (cmds[0].trim() === "_TIMESTAMP_") {
+						// ignore
+						return;
+					}
+					cmds[0].trim().split(",").forEach((c) => {
+						let fields = c.split("=");
+						let symbol = fields[0];
+						let suffix = fields[1];
+						switch (suffix) {
+							// TODO combine
+							case "S":
+							case "s":
+							case "Ss":
+							case "Ssc":
+								subReq.subscriptionRequest.symbol = symbol;
+								__logger.info("Subscribing to: " + symbol + " " + suffix);
+								openfeedSendSubscriptionRequest(subReq);
+								break;
+						}
 					});
-				}
-			});
-
+					break;
+				case "STOP":
+					cmds.shift();
+					cmds[0].trim().split(",").forEach((c) => {
+						let fields = c.split("=");
+						let symbol = fields[0];
+						let suffix = fields[1];
+						switch (suffix) {
+							case "S":
+							case "s":
+							case "Ss":
+							case "Ssc":
+								subReq.subscriptionRequest.symbol = symbol;
+								subReq.subscriptionRequest.unsubscribe = true;
+								__logger.info("UnSubscribing to: " + symbol + " " + suffix);
+								openfeedSendSubscriptionRequest(subReq);
+								break;
+						}
+					});
+					break;
+			}
 		}
 
-		function openfeedSendSubscriptionRequest(symbol) {
-			let subReq = {
-				"subscriptionRequest": {
-					"correlationId": "<correlationId>",
-					"token": "<token>",
-					"service": Openfeed.Service.REAL_TIME,
-				}
-			};
-			subReq.subscriptionRequest.correlationId = __correlationId++;
-			subReq.subscriptionRequest.token = __token;
-			subReq.subscriptionRequest.symbol = symbol;
-			let protoMessage = __encoder.createMessage(subReq);
+		function openfeedSendSubscriptionRequest(request) {
+			request.subscriptionRequest.correlationId = __correlationId++;
+			request.subscriptionRequest.token = __token;
+			let protoMessage = __encoder.createMessage(request);
 			console.log("> " + JSON.stringify(protoMessage));
 			let buf = __encoder.encode(protoMessage);
 			__connection.send(buf);
 		}
+		
 		/**
 		 * Handle Openfeed Response
 		*/
@@ -2152,7 +2190,7 @@ module.exports = (() => {
 				case "marketUpdate":
 					definition = getDefinition(ofMessage.marketUpdate.marketId);
 					ddfSymbol = __marketIdToDdfSymbol[ofMessage.marketUpdate.marketId];
-					openfeedMarketUpdate(ddfSymbol,definition, ofMessage);
+					openfeedMarketUpdate(ddfSymbol, definition, ofMessage);
 					break;
 				default:
 			}
@@ -2203,7 +2241,7 @@ module.exports = (() => {
 			parseMarketMessage(message);
 		}
 		function openfeedInstrumentDefinition(ofMessage) {
-			__logger.debug("INST < " + JSON.stringify(ofMessage,null,4));
+			__logger.debug("INST < " + JSON.stringify(ofMessage, null, 4));
 			let def = ofMessage.instrumentDefinition;
 
 			let ddfSymbol = null;
@@ -2212,8 +2250,8 @@ module.exports = (() => {
 					ddfSymbol = sym.symbol;
 				}
 			});
-			if(!ddfSymbol) {
-				__logger.warn(def.symbol + " does not have a DDF symbol: ",JSON.stringify(def));
+			if (!ddfSymbol) {
+				__logger.warn(def.symbol + " does not have a DDF symbol: ", JSON.stringify(def));
 			}
 			__marketIdToDefinition[def.marketId] = def;
 			__marketIdToDdfSymbol[def.marketId] = ddfSymbol;
@@ -2234,18 +2272,18 @@ module.exports = (() => {
 			// 	__logger.error("Getting Profile: ", err);
 			// });
 		}
-		
+
 		function openfeedMarketSnapshot(ddfSymbol, definition, ofMessage) {
-			__logger.debug("SNAP < " + JSON.stringify(ofMessage,null,4));
-			let messages = __openfeedConverter.convert(ofMessage,ddfSymbol,definition);
-			messages.forEach ( (m) => {
+			__logger.debug("SNAP < " + JSON.stringify(ofMessage, null, 4));
+			let messages = __openfeedConverter.convert(ofMessage, ddfSymbol, definition);
+			messages.forEach((m) => {
 				parseMarketMessage(m);
 			});
 		}
 
 		function openfeedMarketUpdate(ddfSymbol, definition, ofMessage) {
-			let messages = __openfeedConverter.convert( ofMessage, ddfSymbol, definition);
-			messages.forEach ( (m) => {
+			let messages = __openfeedConverter.convert(ofMessage, ddfSymbol, definition);
+			messages.forEach((m) => {
 				parseMarketMessage(m);
 			});
 		}
@@ -2348,36 +2386,41 @@ module.exports = (() => {
 	'use strict';
 
 	const logger = LoggerFactory.getLogger('@barchart/marketdata-api-js');
-	const protoFile = __dirname + "/../../../openfeed/proto/openfeed_api.proto";
 
-	// Requests
-	var OpenfeedGatewayRequestType = null;
-	// Responses
-	var OpenfeedGatewayMessageType = null;
 
-	
-	logger.info("Using protobuf file: "+ protoFile);
-
-	protobuf.load(protoFile, (err, root) => {
-		if (err)
-			throw err;
-		OpenfeedGatewayRequestType = root.lookupType("org.openfeed.OpenfeedGatewayRequest");
-		OpenfeedGatewayMessageType = root.lookupType("org.openfeed.OpenfeedGatewayMessage");
-	});
-		
 	/**
 	 */
 	class OpenfeedCodec {
+		constructor(config) {
+			this._config = config;
+			this._protoFile = __dirname + "/../../../openfeed/proto/openfeed_api.proto";
+			if (this._config && this._config.protoPath) {
+				this._protoFile = config.protoPath;
+			}
+			logger.info("Using protobuf file: " + this._protoFile);
+			// Requests
+			this.OpenfeedGatewayRequestType = null;
+			// Responses
+			this.OpenfeedGatewayMessageType = null;
+			// Load Protobuf Definitions
+			protobuf.load(this._protoFile, (err, root) => {
+				if (err)
+					throw err;
+				this.OpenfeedGatewayRequestType = root.lookupType("org.openfeed.OpenfeedGatewayRequest");
+				this.OpenfeedGatewayMessageType = root.lookupType("org.openfeed.OpenfeedGatewayMessage");
+			});
+		}
+
 		createMessage(o) {
-			return OpenfeedGatewayRequestType.create(o);
+			return this.OpenfeedGatewayRequestType.create(o);
 		}
 		encode(protoMessage) {
-			var buffer = OpenfeedGatewayRequestType.encodeDelimited(protoMessage).finish();
+			var buffer = this.OpenfeedGatewayRequestType.encodeDelimited(protoMessage).finish();
 			return buffer;
 		}
-		
+
 		decode(data) {
-			return OpenfeedGatewayMessageType.decodeDelimited(new Uint8Array(data));
+			return this.OpenfeedGatewayMessageType.decodeDelimited(new Uint8Array(data));
 		}
 	}
 
@@ -2503,7 +2546,7 @@ module.exports = (() => {
 		constructor(config) {
 			this._config = config;
 			if(this._config && this._config.isOpenfeed()) {
-				this._codec = new OpenfeedCodec();
+				this._codec = new OpenfeedCodec(this._config);
 			}
 		}
 
@@ -4840,8 +4883,13 @@ module.exports = (() => {
                     message.subrecord = '8';
                     message.bidPrice = this._convertPrice(definition, update.bbo.bidPrice);
                     message.bidSize = update.bbo.bidQuantity;
+                    message.bidOrderCount = update.bbo.bidOrderCount > 0 ? update.bbo.bidOrderCount : undefined;
+                    message.bidOriginator = update.bbo.bidOriginator  ? update.bbo.bidOriginator : undefined;
                     message.askPrice = this._convertPrice(definition, update.bbo.offerPrice);
                     message.askSize = update.bbo.offerQuantity;
+                    message.askOrderCount = update.bbo.offerOrderCount > 0 ? update.bbo.offerOrderCount : undefined;
+                    message.askOriginator = update.bbo.offerOriginator  ? update.bbo.offerOriginator : undefined;
+                    message.nationalBboUpdated = update.bbo.nationalBboUpdated;
                     message.day = this._getTradingDay(ddfSymbol);
                     // TODO
                     message.session = ' ';
@@ -4877,10 +4925,11 @@ module.exports = (() => {
                             else {
                                 message.day = this._getTradingDay(ddfSymbol);
                             }
+                            message.tradeId = entry.trade.tradeId ? entry.trade.tradeId : undefined;
+                            message.side = entry.trade.side ? entry.trade.side : undefined;
+                            // TODO add other fields
                             // TODO
                             message.session = ' ';
-                            // Side (Not in DDF)
-                            message.side = entry.trade.side;
                             message.type = 'TRADE';
                             ret.push(message);
                         } else if (entry.tradeCorrection) {
