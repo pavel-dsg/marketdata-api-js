@@ -41,20 +41,24 @@ const startup = (() => {
 	});
 
 	const host = process.argv[2];
-	const username = process.argv[3];
-	const password = process.argv[4];
-	const symbols = process.argv[5];
+	const port = process.argv[3];
+	const username = process.argv[4];
+	const password = process.argv[5];
+	const symbols = process.argv[6];
 
-	__logger.log(`Example: Instantiating Connection (using Node.js adapter) for [ ${username}/${password} ] @ [ ${host} ]`);
-
+	
 	var useOpenfeed = true;
 	var config = new ClientConfig();
+	var url = "ws://" +host + ":" + port + "/ws";
+	
 	if(useOpenfeed) {
-		config.url = "ws://openfeed.aws.barchart.com:9001/ws";
+		config.url = url;
 		config.protocol = Protocol.OPENFEED;
 		// Configurable protobuf path
 		// config.protoPath = "xxxx";
 	}
+
+	__logger.log(`Example: Instantiating Connection (using Node.js adapter) for [ ${username}/${password} ] @ [ ${url} ]`);
 
 	connection = new Connection(config);
 	adapterFactory = new WebSocketAdapterFactoryForNode(config);

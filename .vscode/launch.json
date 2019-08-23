@@ -9,8 +9,7 @@
             "request": "launch",
             "name": "MarketDataApiNode",
             "program": "${workspaceFolder}/example/node/example.js",
-            "args": [ "qsws-us-e-01.aws.barchart.com","***openfeed","password","IBM"]
-            // "args": [ "qsws-us-e-01.aws.barchart.com","***openfeed","password","BTCUSD"]
+            "args": [ "openfeed-jerq-test.aws.barchart.com","8081","dlucek","barchart","BTCUSD"]
         },
         {
             "type": "node",
