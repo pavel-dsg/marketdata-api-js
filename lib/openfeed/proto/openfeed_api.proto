@@ -44,6 +44,17 @@ enum Service {
   DELAYED = 2;
   REAL_TIME_SNAPSHOT = 3;
   DELAYED_SNAPSHOT = 4;
+  END_OF_DAY = 5;
+}
+
+enum SubscriptionType {
+    // Quote, trades, volume, etc..
+	QUOTE = 0;
+	DEPTH_PRICE = 1;
+	DEPTH_ORDER = 2;
+	TRADES = 3;
+	CUMLATIVE_VOLUME = 4;
+	OHLC = 5;
 }
 
 ////////////////////
@@ -115,11 +126,10 @@ message InstrumentReference {
    string ddfExchange = 6; 
    string ddfBaseCode = 7; 
 }
-
 message InstrumentReferenceResponse {
   sint64 correlationId = 1;
   Status status = 2;
-  repeated InstrumentReference instrumentReferences = 10;
+  InstrumentReference reference = 5;
 }
 
 message SubscriptionRequest {
@@ -129,13 +139,18 @@ message SubscriptionRequest {
   /// Preferred service (realtime or delayed).
   Service service = 3;
   bool unsubscribe = 4;
-  oneof request {
-   string symbol = 10;
-   sint64 marketId = 11;
-   string exchange = 12;
-   sint32 channelId = 13;
-  }
-  sint32 snapshotIntervalSeconds = 127;
+  repeated Request requests = 5;
+  message Request {
+    oneof data {
+       string symbol = 1;
+       sint64 marketId = 2;
+       string exchange = 3;
+       sint32 channelId = 4;
+    }
+    SubscriptionType subscriptionType = 10;
+    /// 0 = send only current snapshot, else send at interval seconds 
+    sint32 snapshotIntervalSeconds = 11;
+   }
 }
 
 message SubscriptionResponse {
@@ -143,7 +158,9 @@ message SubscriptionResponse {
   Status status = 2;
   string symbol = 3;
   sint64 marketId = 4;
-  sint32 channelId = 5;
+  string exchange = 5;
+  sint32 channelId = 6;
+  SubscriptionType subscriptionType = 7;
 }
 
 // Socket interface
@@ -152,6 +169,8 @@ message OpenfeedGatewayRequest {
     LoginRequest loginRequest = 1;
     LogoutRequest logoutRequest = 2;
     SubscriptionRequest subscriptionRequest = 3;
+    InstrumentRequest instrumentRequest = 4;
+    InstrumentReferenceRequest instrumentReferenceRequest = 5;
   }
 }
 
@@ -166,6 +185,8 @@ message OpenfeedGatewayMessage {
     InstrumentDefinition instrumentDefinition = 7;
     MarketSnapshot marketSnapshot = 8;
     MarketUpdate marketUpdate = 9;
+    CumulativeVolume cumulativeVolume = 10;
+    Ohlc ohlc = 11;
   }
 }
 

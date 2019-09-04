@@ -91,6 +91,7 @@ enum SettlementSource {
   UNKNOWN_SETTLEMENT_SOURCE = 0;
   GLOBEX = 1;
   ITC = 2;
+  MANUAL = 3;
 }
 
 // /////////////////////////////////////////////////////////////////
@@ -831,6 +832,21 @@ message MarketSummary {
   }
   /// Used by CME ITC.
   string session = 21;
+
+  /// Used to differntiate various ddf messages.
+  enum SummaryType {
+    // DDF 2/1 Exchange refresh
+    EXCHANGE_REFRESH = 0;
+    // DDF 2/6 Live Prices refresh
+    REFRESH_LIVE_PRICE = 1;
+    // DDF 3/C end-of-day commodity prices
+    EOD_COMMODITY_PRICES = 2;
+    // DDF 3/S end-of-day stock and forex prices and volume
+    EOD_STOCK_FOREX_PRICES = 3;
+    // DDF 3/I end-of-day commodity volume and open interest message
+    EOD_COMMODITY_STATS = 4;
+  }
+  SummaryType summaryType = 22;
 }
 
 
@@ -862,7 +878,43 @@ message TracePoint {
 message TCPHistoricalReplayRequest {
   int32 channel = 1;
   int32 resetNumber = 2;
+  
   int64 sequence  = 3;
   int32 count  = 4;
   string requestId = 5;
 }
+
+/// The CumulativeVolume class encapsulates all of the trades throughout the day,
+/// and organizes a table of volume at prices.
+message CumulativeVolume {
+  sint64 marketId = 1;
+  string symbol = 2;
+  /// UTC Timestamp of transaction, nano seconds since Unix epoch
+  sint64 transactionTime = 3;
+  float lastPrice = 4;
+  sint64 lastQuantity = 5;
+  sint64 lastCumulativeVolume = 6;
+  // UTC Timestamp, nano seconds since Unix epoch
+  sint64 date = 7;
+  repeated PriceLevelVolume priceVolumes = 8;
+  
+  message PriceLevelVolume {
+    float price = 1;
+    sint64 volume = 2;
+   }
+}
+
+/// Open,High,Low,Close
+message Ohlc {
+  sint64 marketId = 1;
+  string symbol = 2;
+  /// Most recent opening price
+  Open open = 3;
+  /// High price for the trading session
+  High high = 4;
+  /// Low price for the trading session
+  Low low = 5;
+  /// Most recent closing price
+  Close close = 6;
+}
+
