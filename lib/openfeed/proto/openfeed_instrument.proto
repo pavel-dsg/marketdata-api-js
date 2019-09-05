@@ -184,6 +184,11 @@ message InstrumentDefinition {
   /// true if this instrument generated FX option.
   bool syntheticAmericanOptionInstrument = 223;
 
+  /// 
+  string barchartExchangeCode = 224;
+  /// 
+  string barchartBaseCode = 225;
+  
   // #############################################
   enum InstrumentType {
     UNKNOWN_INSTRUMENT_TYPE = 0;
