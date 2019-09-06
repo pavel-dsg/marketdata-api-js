@@ -29,11 +29,17 @@ const startup = (() => {
 
 	let connection = null;
 	let adapterFactory = null;
+	let handleMarketUpdate = null;
+	let  handleMarketDepth = null;
 
 	process.on('SIGINT', () => {
 		__logger.log('\nExample: Processing SIGINT');
 
 		if (connection !== null) {
+			// unsubscribe
+			symbols.split(',').forEach((s) => {
+				connection.off(SubscriptionType.MarketUpdate, handleMarketUpdate, s);
+			});
 			connection.disconnect();
 		}
 
@@ -66,6 +72,7 @@ const startup = (() => {
 		startPromise = codec.init();
 	}
 
+	// Wait for protobuf loading
 	startPromise.then(() => {
 		__logger.log(`Example: Instantiating Connection (using Node.js adapter) for [ ${username}/${password} ] @ [ ${url} ]`);
 
@@ -73,7 +80,6 @@ const startup = (() => {
 		adapterFactory = new WebSocketAdapterFactoryForNode(config, codec);
 
 		connection.connect(host, username, password, adapterFactory);
-
 		// Handlers
 		connection.on(SubscriptionType.Timestamp, (message) => {
 			__logger.log('TS < ' + JSON.stringify(message));
@@ -81,41 +87,45 @@ const startup = (() => {
 		connection.on(SubscriptionType.Events, (message) => {
 			__logger.log('EVT < ' + JSON.stringify(message));
 			if (message.event === "login success") {
+				__logger.log('Logged In!');
+				// request profile data
+				symbols.split(',').forEach((s) => {
+					let marketState = connection.getMarketState();
+					let p = marketState.getProfile("ESU9", (p) => {
+						__logger.info("< Profile: ", JSON.stringify(p));
+					});
+				});
 			}
 		});
-
+		handleMarketDepth = (message) => {
+			// __logger.log("< " + message.type + " " + JSON.stringify(message));
+		};
+		var price = null;
+		handleMarketUpdate = (message) => {
+			let s = message.symbol;
+			switch (message.type) {
+				case "TOB":
+					// __logger.log("< " + message.type + " " + JSON.stringify(message));
+					break;
+				case "TRADE":
+					// __logger.log("< " + message.type + " " + JSON.stringify(message));
+					break;
+			}
+			let q = connection.getMarketState().getQuote(s);
+			const current = connection.getMarketState().getQuote(s).lastPrice;
+			if (price !== current) {
+				price = current;
+				// __logger.log(`Example: ${symbol} = ${price}`);
+			}
+		};
+		const handleCumulativeVolume = (message) => {
+			__logger.log("< " + message.type + " " + JSON.stringify(message));
+		};
 
 		// Send subscriptions
-		if (typeof symbols === 'string') {
+		let sendSubscriptions = true;
+		if (sendSubscriptions && typeof symbols === 'string') {
 			symbols.split(',').forEach((s) => {
-				let price = null;
-
-				const handleMarketDepth = (message) => {
-					__logger.log("< " + message.type + " " + JSON.stringify(message));
-				};
-
-				const handleMarketUpdate = (message) => {
-					switch (message.type) {
-						case "TOB":
-							// __logger.log("< " + message.type + " " + JSON.stringify(message));
-							break;
-						case "TRADE":
-							// __logger.log("< " + message.type + " " + JSON.stringify(message));
-							break;
-					}
-					let q = connection.getMarketState().getQuote(s);
-					const current = connection.getMarketState().getQuote(s).lastPrice;
-					if (price !== current) {
-						price = current;
-						// __logger.log(`Example: ${s} = ${price}`);
-					}
-				};
-
-
-				const handleCumulativeVolume = (message) => {
-					__logger.log("< " + message.type + " " + JSON.stringify(message));
-				};
-
 				// connection.on(SubscriptionType.MarketDepth, handleMarketDepth, s);
 				connection.on(SubscriptionType.MarketUpdate, handleMarketUpdate, s);
 				// connection.on(SubscriptionType.CumulativeVolume, handleCumulativeVolume, s);

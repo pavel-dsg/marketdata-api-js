@@ -38,23 +38,14 @@ enum Result {
   GENERIC_FAILURE = 127;
 }
 
-enum Service {
-  UNKNOWN_SERVICE = 0;
-  REAL_TIME = 1;
-  DELAYED = 2;
-  REAL_TIME_SNAPSHOT = 3;
-  DELAYED_SNAPSHOT = 4;
-  END_OF_DAY = 5;
-}
-
 enum SubscriptionType {
-    // Quote, trades, volume, etc..
-	QUOTE = 0;
-	DEPTH_PRICE = 1;
-	DEPTH_ORDER = 2;
-	TRADES = 3;
-	CUMLATIVE_VOLUME = 4;
-	OHLC = 5;
+	ALL = 0;
+	QUOTE = 1;
+	DEPTH_PRICE = 2;
+	DEPTH_ORDER = 3;
+	TRADES = 4;
+	CUMLATIVE_VOLUME = 5;
+	OHLC = 6;
 }
 
 ////////////////////

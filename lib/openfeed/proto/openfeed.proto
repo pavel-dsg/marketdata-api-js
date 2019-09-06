@@ -94,6 +94,15 @@ enum SettlementSource {
   MANUAL = 3;
 }
 
+enum Service {
+  UNKNOWN_SERVICE = 0;
+  REAL_TIME = 1;
+  DELAYED = 2;
+  REAL_TIME_SNAPSHOT = 3;
+  DELAYED_SNAPSHOT = 4;
+  END_OF_DAY = 5;
+}
+
 // /////////////////////////////////////////////////////////////////
 // Messages
 // /////////////////////////////////////////////////////////////////
@@ -204,7 +213,9 @@ message MarketSnapshot {
   /// Divide prices by this value to get real price values.  Optional, use value
   /// from InstrumentDefinition if not set.
   sint32 priceDenominator = 8;
-  //
+  // 
+  Service service = 9;
+  // 
   InstrumentStatus instrumentStatus = 10;
   // Best Bid Offer
   BestBidOffer bbo = 11;

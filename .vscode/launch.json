@@ -10,7 +10,7 @@
             "name": "MarketDataApiNode",
             "program": "${workspaceFolder}/example/node/example.js",
             // "args": [ "openfeed-jerq-test.aws.barchart.com","8081","dlucek","barchart","^BTCUSD"]
-            "args": [ "localhost","8081","dlucek","barchart","ESU9"]
+            "args": [ "localhost","8081","dlucek","barchart","ESU9,IBM"]
             // "args": [ "localhost","8081","dlucek","barchart","^BTCUSD,ESU9"]
         },
         {
