@@ -35,11 +35,11 @@ var onTimestamp = function (date) {
 
 $(document).ready(function () {
 	console.log("Starting Market Data JS Client ");
-
+np
 	var useOpenfeed = true;
 	var config = new ClientConfig();
 	if(useOpenfeed) {
-		config.url = "ws://openfeed.aws.barchart.com:9001/ws";
+		config.url = "ws://openfeed-stream-stage.aws.barchart.com/ws";
 		config.protocol = Protocol.OPENFEED;
 	}
 	connection = new Connection(config);

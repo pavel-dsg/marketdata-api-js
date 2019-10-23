@@ -4,14 +4,16 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
+        
+
         {
             "type": "node",
             "request": "launch",
             "name": "MarketDataApiNode",
             "program": "${workspaceFolder}/example/node/example.js",
-            // "args": [ "openfeed-jerq-test.aws.barchart.com","8081","dlucek","barchart","^BTCUSD"]
-            "args": [ "openfeed-stream-stage.aws.barchart.com","80","JERQ1","barchart","^BTCUSD"]
-            // "args": [ "localhost","8081","dlucek","barchart","^BTCUSD,ESU9"]
+            // "args": [ "openfeed-stream-stage.aws.barchart.com","80","JERQ1","barchart","^BTCUSD"]
+            "args": [ "localhost","8082","dlucek","barchart","^BTCUSD"]
         },
         {
             "type": "node",

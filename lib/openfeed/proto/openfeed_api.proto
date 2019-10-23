@@ -17,6 +17,38 @@ option optimize_for = SPEED;
 import "openfeed_instrument.proto";
 import "openfeed.proto";
 
+// //////////////////
+// Server API
+// //////////////////
+
+/// Openfeed Server request
+message OpenfeedGatewayRequest {
+  oneof data {
+    LoginRequest loginRequest = 1;
+    LogoutRequest logoutRequest = 2;
+    SubscriptionRequest subscriptionRequest = 3;
+    InstrumentRequest instrumentRequest = 4;
+    InstrumentReferenceRequest instrumentReferenceRequest = 5;
+  }
+}
+/// Openfeed Server Response
+message OpenfeedGatewayMessage {
+  oneof data {
+    LoginResponse loginResponse = 1;
+    LogoutResponse logoutResponse = 2;
+    InstrumentResponse instrumentResponse = 3;
+    InstrumentReferenceResponse instrumentReferenceResponse = 4;
+    SubscriptionResponse subscriptionResponse = 5;
+    MarketStatus marketStatus = 6;
+    HeartBeat heartBeat = 7;
+    InstrumentDefinition instrumentDefinition = 8;
+    MarketSnapshot marketSnapshot = 9;
+    MarketUpdate marketUpdate = 10;
+    VolumeAtPrice volumeAtPrice = 11;
+    Ohlc ohlc = 12;
+  }
+}
+
 // ///////////
 // Enums
 // //////////
@@ -37,15 +69,15 @@ enum Result {
   AUTHENTICATION_REQUIRED = 126;    
   GENERIC_FAILURE = 127;
 }
-
 enum SubscriptionType {
 	ALL = 0;
 	QUOTE = 1;
-	DEPTH_PRICE = 2;
-	DEPTH_ORDER = 3;
-	TRADES = 4;
-	CUMLATIVE_VOLUME = 5;
-	OHLC = 6;
+	QUOTE_PARTICIPANT = 2;
+	DEPTH_PRICE = 3;
+	DEPTH_ORDER = 4;
+	TRADES = 5;
+	CUMLATIVE_VOLUME = 6;
+	OHLC = 7;
 }
 
 ////////////////////
@@ -57,29 +89,28 @@ message Status {
   Service service = 3;
 }
 
+/// Login
 message LoginRequest {
   sint64 correlationId = 1;
   string username = 2;
   string password = 3;
 }
-
 message LoginResponse {
   sint64 correlationId = 1;
   Status status = 2;
   string token = 3;
 }
-
+/// Logout
 message LogoutRequest  {
   sint64 correlationId = 1;
   string token = 3;
 }
-
 message LogoutResponse {
   sint64 correlationId = 1;
   Status status = 2;
 }
 
-// Requests Instrument Definition(s)
+/// Instrument Definition(s), will stream InstrumentDefinition(s)
 message InstrumentRequest {
   sint64 correlationId = 1;
   string token = 2;
@@ -90,13 +121,13 @@ message InstrumentRequest {
    sint32 channelId = 13;
   }
 }
-
 message InstrumentResponse {
   sint64 correlationId = 1;
   Status status = 2;
+  sint32 numberOfDefinitions = 3;
 }
 
-// Requests Instrument References, returns InstrumentReferenceResponse
+/// Instrument References, returns InstrumentReferenceResponse(s)
 message InstrumentReferenceRequest {
   sint64 correlationId = 1;
   string token = 2;
@@ -107,22 +138,21 @@ message InstrumentReferenceRequest {
    sint32 channelId = 13;
   }
 }
-
-message InstrumentReference {
-   sint32 channelId = 1;
-   sint64 marketId = 2;
-   string symbol = 3;
-   string exchange = 4;
-   string ddfSymbol = 5;
-   string ddfExchange = 6; 
-   string ddfBaseCode = 7; 
-}
 message InstrumentReferenceResponse {
   sint64 correlationId = 1;
   Status status = 2;
-  InstrumentReference reference = 5;
+  sint32 numberOfDefinitions = 3;
+  //
+  sint32 channelId = 4;
+  sint64 marketId = 5;
+  string symbol = 6;
+  string exchange = 7;
+  string ddfSymbol = 8;
+  string ddfExchange = 9; 
+  string ddfBaseCode = 10; 
 }
 
+/// Subscription Request
 message SubscriptionRequest {
   /// Client-assigned id for this request.  Response will include same id
   sint64 correlationId = 1;
@@ -138,12 +168,11 @@ message SubscriptionRequest {
        string exchange = 3;
        sint32 channelId = 4;
     }
-    SubscriptionType subscriptionType = 10;
-    /// 0 = send only current snapshot, else send at interval seconds 
+    repeated SubscriptionType subscriptionType = 10;
+    /// 0 = send only current snapshot once, else send at interval seconds 
     sint32 snapshotIntervalSeconds = 11;
    }
 }
-
 message SubscriptionResponse {
   sint64 correlationId = 1;
   Status status = 2;
@@ -151,34 +180,8 @@ message SubscriptionResponse {
   sint64 marketId = 4;
   string exchange = 5;
   sint32 channelId = 6;
-  SubscriptionType subscriptionType = 7;
+  sint32 numberOfDefinitions = 7;
 }
 
-// Socket interface
-message OpenfeedGatewayRequest {
-  oneof data {
-    LoginRequest loginRequest = 1;
-    LogoutRequest logoutRequest = 2;
-    SubscriptionRequest subscriptionRequest = 3;
-    InstrumentRequest instrumentRequest = 4;
-    InstrumentReferenceRequest instrumentReferenceRequest = 5;
-  }
-}
-
-message OpenfeedGatewayMessage {
-  oneof data {
-    LoginResponse loginResponse = 1;
-    LogoutResponse logoutResponse = 2;
-    InstrumentResponse instrumentResponse = 3;
-    InstrumentReferenceResponse instrumentReferenceResponse = 4;
-    SubscriptionResponse subscriptionResponse = 5;
-    HeartBeat heartBeat = 6;
-    InstrumentDefinition instrumentDefinition = 7;
-    MarketSnapshot marketSnapshot = 8;
-    MarketUpdate marketUpdate = 9;
-    CumulativeVolume cumulativeVolume = 10;
-    Ohlc ohlc = 11;
-  }
-}
 
 

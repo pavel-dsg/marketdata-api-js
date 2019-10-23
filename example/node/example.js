@@ -91,7 +91,7 @@ const startup = (() => {
 				// request profile data
 				symbols.split(',').forEach((s) => {
 					let marketState = connection.getMarketState();
-					let p = marketState.getProfile("ESU9", (p) => {
+					let p = marketState.getProfile(s, (p) => {
 						__logger.info("< Profile: ", JSON.stringify(p));
 					});
 				});
