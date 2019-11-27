@@ -42,6 +42,7 @@ const startup = (() => {
 	connection = new Connection();
 	adapterFactory = new WebSocketAdapterFactoryForNode();
 	connection.connect(host, username, password, adapterFactory);
+	var dateOptions = {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', timeStyle: 'long', timeZoneName: 'short'};
 	if (typeof symbols === 'string') {
 		symbols.split(',').forEach((s) => {
 			let price = null;
@@ -50,9 +51,17 @@ const startup = (() => {
 				const current = q.lastPrice;
 				if (price !== current) {
 					price = current;
-					__logger.log(`${s} = ${price}`);
+					//__logger.log(`${s} = ${price}`);
 					//__logger.log(quote);
-					stream.write(`${Date()},${q.lastUpdate},${q.profile.root},${s},${q.profile.exchange},barchart,live,${q.bidPrice},${q.bidSize},${q.askPrice},${q.askSize},${q.lastPrice},${q.tradeSize}\n`);
+					dateOptions.timeZone = q.profile.exchangeRef.timezoneExchange;
+					var marketTime = q.lastUpdate.toLocaleString("en-US", dateOptions);
+					var marketTimeMs = q.lastUpdate.getMilliseconds();
+					var splitted = marketTime.split(' ');
+					splitted[0] = splitted[0] + '.' + marketTimeMs;
+					marketTime = splitted.join(' ');
+					delete dateOptions.timeZone;
+					var localTime = new Date().toLocaleString("en-US", dateOptions);
+					stream.write(`${localTime},${marketTime},${q.profile.root},${s},${q.profile.exchange},barchart,live,${q.bidPrice},${q.bidSize},${q.askPrice},${q.askSize},${q.lastPrice},${q.tradeSize}\n`);
 				}
 			};
 			connection.on(SubscriptionType.MarketUpdate, handleMarketUpdate, s);
