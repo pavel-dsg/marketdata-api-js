@@ -20,15 +20,15 @@ const startup = (() => {
 	//LoggerFactory.configureForSilence();
 	LoggerFactory.configure(new CustomLoggingProvider());
 	const __logger = LoggerFactory.getLogger('@barchart/example');
-	__logger.log(`Example: Node.js example script started [ version ${version} ]`);
+	__logger.log(`Node.js example script started [ version ${version} ]`);
 	let connection = null;
 	let adapterFactory = null;
 	process.on('SIGINT', () => {
-		__logger.log('\nExample: Processing SIGINT');
+		__logger.log('\nProcessing SIGINT');
 		if (connection !== null) {
 			connection.disconnect();
 		}
-		__logger.log('Example: Node.js example script ending');
+		__logger.log('Node.js example script ending');
 		__logger.log('Closing file handler');
 		stream.end();
 		process.exit();
@@ -45,7 +45,9 @@ const startup = (() => {
 	const username = process.argv[3];
 	const password = process.argv[4];
 	const symbols = process.argv[5];
-	__logger.log(`Example: Instantiating Connection (using Node.js adapter) for [ ${username}/${password} ] @ [ ${host} ]`);
+	__logger.log(`Instantiating Connection (using Node.js adapter) for [ ${username}/${password} ] @ [ ${host} ]`);
+	__logger.log('Writing ticker to quote_log.txt');
+	__logger.log('Ticker format: local_time,market_time,symbol,local_bc_symbol,exchange,broker,ticker_type,bid,bid_size,ask,ask_size,last,last_size');
 	var stream = fs.createWriteStream("quote_log.txt", {flags:'a'});
 	connection = new Connection();
 	adapterFactory = new WebSocketAdapterFactoryForNode();
