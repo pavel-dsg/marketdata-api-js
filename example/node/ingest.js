@@ -6,6 +6,14 @@ const Connection = require('./../../lib/connection/Connection'),
 	WebSocketAdapterFactoryForNode = require('./../../lib/connection/adapter/WebSocketAdapterFactoryForNode');
 const CustomLoggingProvider = require('./logging/CustomLoggingProvider');
 const LoggerFactory = require('./../../lib/logging/LoggerFactory');
+
+function getMsTimeRepr(dateObject, dateStr) {
+	var ms = dateObject.getMilliseconds();
+	var splitted = dateStr.split(' ');
+	splitted[0] = splitted[0] + '.' + ms;
+	return splitted.join(' ');
+}
+
 const startup = (() => {
 	'use strict';
 	//LoggerFactory.configureForConsole();
@@ -54,14 +62,13 @@ const startup = (() => {
 					//__logger.log(`${s} = ${price}`);
 					//__logger.log(quote);
 					dateOptions.timeZone = q.profile.exchangeRef.timezoneExchange;
-					var marketTime = q.lastUpdate.toLocaleString("en-US", dateOptions);
-					var marketTimeMs = q.lastUpdate.getMilliseconds();
-					var splitted = marketTime.split(' ');
-					splitted[0] = splitted[0] + '.' + marketTimeMs;
-					marketTime = splitted.join(' ');
+					var marketTimeStr = q.lastUpdate.toLocaleString("en-US", dateOptions);
+					marketTimeStr = getMsTimeRepr(q.lastUpdate, marketTimeStr);
 					delete dateOptions.timeZone;
-					var localTime = new Date().toLocaleString("en-US", dateOptions);
-					stream.write(`${localTime},${marketTime},${q.profile.root},${s},${q.profile.exchange},barchart,live,${q.bidPrice},${q.bidSize},${q.askPrice},${q.askSize},${q.lastPrice},${q.tradeSize}\n`);
+					var localTime = new Date();
+					var localTimeStr = localTime.toLocaleString("en-US", dateOptions);
+					localTimeStr = getMsTimeRepr(localTime, localTimeStr);
+					stream.write(`${localTimeStr},${marketTimeStr},${q.profile.root},${s},${q.profile.exchange},barchart,live,${q.bidPrice},${q.bidSize},${q.askPrice},${q.askSize},${q.lastPrice},${q.tradeSize}\n`);
 				}
 			};
 			connection.on(SubscriptionType.MarketUpdate, handleMarketUpdate, s);
