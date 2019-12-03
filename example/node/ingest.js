@@ -46,13 +46,13 @@ const startup = (() => {
 	const password = process.argv[4];
 	const symbols = process.argv[5];
 	__logger.log(`Instantiating Connection (using Node.js adapter) for [ ${username}/${password} ] @ [ ${host} ]`);
-	__logger.log('Writing ticker to quote_log.txt');
+	__logger.log('Writing ticker to quote_log.csv');
 	__logger.log('Ticker format: local_time,market_time,symbol,local_bc_symbol,exchange,broker,ticker_type,bid,bid_size,ask,ask_size,last,last_size');
-	var stream = fs.createWriteStream("quote_log.txt", {flags:'a'});
+	var stream = fs.createWriteStream("quote_log.csv", {flags:'a'});
 	connection = new Connection();
 	adapterFactory = new WebSocketAdapterFactoryForNode();
 	connection.connect(host, username, password, adapterFactory);
-	var dateOptions = {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', timeStyle: 'long', timeZoneName: 'short'};
+	var dateOptions = {dateStyle: 'short', timeStyle: 'long', hour12: false};
 	if (typeof symbols === 'string') {
 		symbols.split(',').forEach((s) => {
 			let price = null;
@@ -64,11 +64,11 @@ const startup = (() => {
 					//__logger.log(`${s} = ${price}`);
 					//__logger.log(quote);
 					dateOptions.timeZone = q.profile.exchangeRef.timezoneExchange;
-					var marketTimeStr = q.lastUpdate.toLocaleString("en-US", dateOptions);
+					var marketTimeStr = q.lastUpdate.toLocaleString("en-US", dateOptions).replace(', ', 'T');
 					marketTimeStr = getMsTimeRepr(q.lastUpdate, marketTimeStr);
 					delete dateOptions.timeZone;
 					var localTime = new Date();
-					var localTimeStr = localTime.toLocaleString("en-US", dateOptions);
+					var localTimeStr = localTime.toLocaleString("en-US", dateOptions).replace(', ', 'T');
 					localTimeStr = getMsTimeRepr(localTime, localTimeStr);
 					stream.write(`${localTimeStr},${marketTimeStr},${q.profile.root},${s},${q.profile.exchange},barchart,live,${q.bidPrice},${q.bidSize},${q.askPrice},${q.askSize},${q.lastPrice},${q.tradeSize}\n`);
 				}
