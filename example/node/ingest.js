@@ -52,6 +52,7 @@ const startup = (() => {
   var stream = fs.createWriteStream("quote_log.csv", {
     flags: 'a'
   });
+  stream.write('local_time,last_update_time,time,trade_time,time_stamp,symbol,local_bc_symbol,exchange,broker,ticker_type,bid,bid_size,ask,ask_size,last,last_size\n');
   connection = new Connection();
   adapterFactory = new WebSocketAdapterFactoryForNode();
   connection.connect(host, username, password, adapterFactory);
