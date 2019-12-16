@@ -48,7 +48,7 @@ const startup = (() => {
   const symbols = process.argv[5];
   __logger.log(`Instantiating Connection (using Node.js adapter) for [ ${username}/${password} ] @ [ ${host} ]`);
   __logger.log('Writing ticker to quote_log.csv');
-  __logger.log('Ticker format: local_time,market_time,symbol,local_bc_symbol,exchange,broker,ticker_type,bid,bid_size,ask,ask_size,last,last_size');
+  __logger.log('Ticker format: local_time,last_update_time,time,trade_time,time_stamp,symbol,local_bc_symbol,exchange,broker,ticker_type,bid,bid_size,ask,ask_size,last,last_size');
   var stream = fs.createWriteStream("quote_log.csv", {
     flags: 'a'
   });
@@ -70,10 +70,13 @@ const startup = (() => {
           price = current;
           dateOptions.timeZone = q.profile.exchangeRef.timezoneExchange;
           var lastUpdateStr = getLocalizedTimestr(q.lastUpdate, dateOptions);
+          var timeStr = getLocalizedTimestr(q.time, dateOptions);
+          var tradeTimeStr = getLocalizedTimestr(q.message.tradeTime, dateOptions);
+          var timeStampStr = getLocalizedTimestr(q.message.timeStamp, dateOptions);
           delete dateOptions.timeZone;
           var localTime = new Date();
           var localTimeStr = getLocalizedTimestr(localTime, dateOptions);
-          stream.write(`${localTimeStr},${lastUpdateStr},${q.profile.root},${s},${q.profile.exchange},barchart,live,${q.bidPrice},${q.bidSize},${q.askPrice},${q.askSize},${q.lastPrice},${q.tradeSize}\n`);
+          stream.write(`${localTimeStr},${lastUpdateStr},${timeStr},${tradeTimeStr},${timeStampStr},${q.profile.root},${s},${q.profile.exchange},barchart,live,${q.bidPrice},${q.bidSize},${q.askPrice},${q.askSize},${q.lastPrice},${q.tradeSize}\n`);
         }
       };
       connection.on(SubscriptionType.MarketUpdate, handleMarketUpdate, s);
